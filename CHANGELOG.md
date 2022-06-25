@@ -1,3 +1,14 @@
+## 1.6.2
+
+- Code refactor
+- Update documentation about opening files
+- Fixes RTL layout. Thanks @Yahllil for reporting!
+
+## 1.6.1
+
+- Add bold, italic, strikethrough & code style to the input. Thanks @hareshgediya for the PR!
+- Add user agent option for preview data fetching. Thanks @felixgabler for the PR!
+
 ## 1.6.0
 
 - **BREAKING CHANGE**: `copyWith` on messages works differently (keeping previous values unless set to null), and sometimes casting to a specific message type is required. Please check your codebase if you're using it. Thanks!
