@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
@@ -7,6 +7,7 @@ import '../models/send_button_visibility_mode.dart';
 import 'attachment_button.dart';
 import 'inherited_chat_theme.dart';
 import 'inherited_l10n.dart';
+import 'input_text_field_controller.dart';
 import 'send_button.dart';
 
 class NewLineIntent extends Intent {
@@ -24,7 +25,7 @@ class Input extends StatefulWidget {
 
   final BoxDecoration? suggestionListDecoration;
 
-  /// Creates [Input] widget
+  /// Creates [Input] widget.
   const Input({
     super.key,
     this.isAttachmentUploading,
@@ -37,23 +38,23 @@ class Input extends StatefulWidget {
     this.suggestionListDecoration,
   });
 
-  /// See [AttachmentButton.onPressed]
-  final void Function()? onAttachmentPressed;
-
   /// Whether attachment is uploading. Will replace attachment button with a
   /// [CircularProgressIndicator]. Since we don't have libraries for
   /// managing media in dependencies we have no way of knowing if
   /// something is uploading so you need to set this manually.
   final bool? isAttachmentUploading;
 
+  /// See [AttachmentButton.onPressed].
+  final void Function()? onAttachmentPressed;
+
   /// Will be called on [SendButton] tap. Has [types.PartialText] which can
   /// be transformed to [types.TextMessage] and added to the messages list.
   final void Function(types.PartialText) onSendPressed;
 
-  /// Will be called whenever the text inside [TextField] changes
+  /// Will be called whenever the text inside [TextField] changes.
   final void Function(String)? onTextChanged;
 
-  /// Will be called on [TextField] tap
+  /// Will be called on [TextField] tap.
   final void Function()? onTextFieldTap;
 
   /// Controls the visibility behavior of the [SendButton] based on the
@@ -65,7 +66,7 @@ class Input extends StatefulWidget {
   State<Input> createState() => _InputState();
 }
 
-/// [Input] widget state
+/// [Input] widget state.
 class _InputState extends State<Input> {
   final _inputFocusNode = FocusNode();
   bool _sendButtonVisible = false;
@@ -96,6 +97,42 @@ class _InputState extends State<Input> {
     _inputFocusNode.dispose();
     _textController.dispose();
     super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final isIOS = defaultTargetPlatform == TargetPlatform.iOS;
+
+    return GestureDetector(
+      onTap: () => _inputFocusNode.requestFocus(),
+      child: isAndroid || isIOS
+          ? _inputBuilder()
+          : Shortcuts(
+              shortcuts: {
+                LogicalKeySet(LogicalKeyboardKey.enter):
+                    const SendMessageIntent(),
+                LogicalKeySet(LogicalKeyboardKey.enter, LogicalKeyboardKey.alt):
+                    const NewLineIntent(),
+                LogicalKeySet(
+                  LogicalKeyboardKey.enter,
+                  LogicalKeyboardKey.shift,
+                ): const NewLineIntent(),
+              },
+              child: Actions(
+                actions: {
+                  SendMessageIntent: CallbackAction<SendMessageIntent>(
+                    onInvoke: (SendMessageIntent intent) =>
+                        _handleSendPressed(),
+                  ),
+                  NewLineIntent: CallbackAction<NewLineIntent>(
+                    onInvoke: (NewLineIntent intent) => _handleNewLine(),
+                  ),
+                },
+                child: _inputBuilder(),
+              ),
+            ),
+    );
   }
 
   void _handleNewLine() {
@@ -156,7 +193,7 @@ class _InputState extends State<Input> {
         .inputPadding
         .copyWith(left: 0, right: 0)
         .add(
-          EdgeInsetsDirectional.fromSTEB(
+          EdgeInsets.fromLTRB(
             widget.onAttachmentPressed != null ? 0 : 24,
             0,
             _sendButtonVisible ? 0 : 24,
@@ -176,6 +213,7 @@ class _InputState extends State<Input> {
                 InheritedChatTheme.of(context).theme.inputContainerDecoration,
             padding: safeAreaInsets,
             child: Row(
+              textDirection: TextDirection.ltr,
               children: [
                 if (widget.onAttachmentPressed != null)
                   AttachmentButton(
@@ -258,41 +296,6 @@ class _InputState extends State<Input> {
           ),
         ),
       ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final isAndroid = Theme.of(context).platform == TargetPlatform.android;
-    final isIOS = Theme.of(context).platform == TargetPlatform.iOS;
-
-    return GestureDetector(
-      onTap: () => _inputFocusNode.requestFocus(),
-      child: isAndroid || isIOS
-          ? _inputBuilder()
-          : Shortcuts(
-              shortcuts: {
-                LogicalKeySet(LogicalKeyboardKey.enter):
-                    const SendMessageIntent(),
-                LogicalKeySet(LogicalKeyboardKey.enter, LogicalKeyboardKey.alt):
-                    const NewLineIntent(),
-                LogicalKeySet(
-                        LogicalKeyboardKey.enter, LogicalKeyboardKey.shift):
-                    const NewLineIntent(),
-              },
-              child: Actions(
-                actions: {
-                  SendMessageIntent: CallbackAction<SendMessageIntent>(
-                    onInvoke: (SendMessageIntent intent) =>
-                        _handleSendPressed(),
-                  ),
-                  NewLineIntent: CallbackAction<NewLineIntent>(
-                    onInvoke: (NewLineIntent intent) => _handleNewLine(),
-                  ),
-                },
-                child: _inputBuilder(),
-              ),
-            ),
     );
   }
 }
