@@ -58,19 +58,17 @@ class _ChatPageState extends State<ChatPage> {
           mentions: [
             /// This is a sample of a mention.
             Mention(
+              /// Trigger mention list when user types @.
+              trigger: '@',
 
-                /// trigger mention list when user types @
-                trigger: '@',
+              /// Data source for mention list.
+              data: _mentionsData,
 
-                /// data source for mention list
-                data: _mentionsData,
-
-                /// builder for the mention list
-                suggestionBuilder: (l) {
-                  return ListTile(
-                    title: Text(l['display']),
-                  );
-                })
+              /// Builder for the mention list.
+              suggestionBuilder: (l) => ListTile(
+                title: Text(l['display']),
+              ),
+            ),
           ],
         ),
       );

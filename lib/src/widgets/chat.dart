@@ -27,10 +27,7 @@ import 'message.dart';
 /// Entry widget, represents the complete chat. If you wrap it in [SafeArea] and
 /// it should be full screen, set [SafeArea]'s `bottom` to `false`.
 class Chat extends StatefulWidget {
-  /// suggestion list decoration for flutter mentions
-  final BoxDecoration? suggestionListDecoration;
-
-  /// Creates a chat widget
+  /// Creates a chat widget.
   Chat({
     super.key,
     this.mentions,
@@ -86,11 +83,19 @@ class Chat extends StatefulWidget {
     this.suggestionListDecoration,
     this.messageAlignment,
     this.userAgent,
+    this.replyingToMessage,
+    this.onCancelReply,
   }) {
     this.showUserAvatars = showUserAvatars ?? (message) => false;
   }
 
-  /// Custom alignment of message
+  /// Suggestion list decoration for flutter mentions.
+  final BoxDecoration? suggestionListDecoration;
+
+  /// Callback for when the user taps on cancel reply button.
+  final Function()? onCancelReply;
+
+  /// Custom alignment of message.
   final Alignment? Function(types.Message message)? messageAlignment;
 
   /// See [Message.avatarBuilder].
@@ -106,6 +111,9 @@ class Chat extends StatefulWidget {
   /// Allows you to replace the default Input widget e.g. if you want to create
   /// a channel view.
   final Widget? customBottomWidget;
+
+  /// Show message above Text field when replying to a message.
+  final types.TextMessage? replyingToMessage;
 
   /// If [dateFormat], [dateLocale] and/or [timeFormat] is not enough to
   /// customize date headers in your case, use this to return an arbitrary
@@ -379,12 +387,14 @@ class _ChatState extends State<Chat> {
                               mentions: widget.mentions,
                               isAttachmentUploading:
                                   widget.isAttachmentUploading,
+                              replyingToMessage: widget.replyingToMessage,
                               onAttachmentPressed: widget.onAttachmentPressed,
                               onSendPressed: widget.onSendPressed,
                               onTextChanged: widget.onTextChanged,
                               onTextFieldTap: widget.onTextFieldTap,
                               sendButtonVisibilityMode:
                                   widget.sendButtonVisibilityMode,
+                              onCancelReply: widget.onCancelReply,
                             ),
                       ],
                     ),

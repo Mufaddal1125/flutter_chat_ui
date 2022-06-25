@@ -8,6 +8,7 @@ import 'attachment_button.dart';
 import 'inherited_chat_theme.dart';
 import 'inherited_l10n.dart';
 import 'input_text_field_controller.dart';
+import 'message.dart';
 import 'send_button.dart';
 
 class NewLineIntent extends Intent {
@@ -21,10 +22,6 @@ class SendMessageIntent extends Intent {
 /// A class that represents bottom bar widget with a text field, attachment and
 /// send buttons inside. By default hides send button when text field is empty.
 class Input extends StatefulWidget {
-  final List<Mention>? mentions;
-
-  final BoxDecoration? suggestionListDecoration;
-
   /// Creates [Input] widget.
   const Input({
     super.key,
@@ -36,7 +33,15 @@ class Input extends StatefulWidget {
     this.onTextFieldTap,
     required this.sendButtonVisibilityMode,
     this.suggestionListDecoration,
+    this.replyingToMessage,
+    this.onCancelReply,
   });
+
+  final List<Mention>? mentions;
+
+  final BoxDecoration? suggestionListDecoration;
+
+  final Function()? onCancelReply;
 
   /// Whether attachment is uploading. Will replace attachment button with a
   /// [CircularProgressIndicator]. Since we don't have libraries for
@@ -56,6 +61,8 @@ class Input extends StatefulWidget {
 
   /// Will be called on [TextField] tap.
   final void Function()? onTextFieldTap;
+
+  final types.TextMessage? replyingToMessage;
 
   /// Controls the visibility behavior of the [SendButton] based on the
   /// [TextField] state inside the [Input] widget.
@@ -212,84 +219,109 @@ class _InputState extends State<Input> {
             decoration:
                 InheritedChatTheme.of(context).theme.inputContainerDecoration,
             padding: safeAreaInsets,
-            child: Row(
-              textDirection: TextDirection.ltr,
+            child: Column(
               children: [
-                if (widget.onAttachmentPressed != null)
-                  AttachmentButton(
-                    isLoading: widget.isAttachmentUploading ?? false,
-                    onPressed: widget.onAttachmentPressed,
-                    padding: buttonPadding,
-                  ),
-                Expanded(
-                  child: Padding(
-                    padding: textPadding,
-                    child: FlutterMentions(
-                      key: _mentionsKey,
-                      suggestionPosition: SuggestionPosition.Top,
-                      textCapitalization: TextCapitalization.sentences,
-                      mentions: widget.mentions?.isNotEmpty == true
-                          ? widget.mentions!
-                          : [Mention(trigger: '@')],
-                      onMarkupChanged: (val) => _valueWithMarkup = val,
-                      suggestionListDecoration: widget.suggestionListDecoration,
-                      cursorColor: InheritedChatTheme.of(context)
-                          .theme
-                          .inputTextCursorColor,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 5,
-                      minLines: 1,
-                      onTap: widget.onTextFieldTap,
-                      decoration: InheritedChatTheme.of(context)
-                          .theme
-                          .inputTextDecoration
-                          .copyWith(
-                            hintStyle: InheritedChatTheme.of(context)
-                                .theme
-                                .inputTextStyle
-                                .copyWith(
-                                  color: InheritedChatTheme.of(context)
-                                      .theme
-                                      .inputTextColor
-                                      .withOpacity(0.5),
-                                ),
-                            hintText:
-                                InheritedL10n.of(context).l10n.inputPlaceholder,
-                            fillColor:
-                                Theme.of(context).brightness == Brightness.light
-                                    ? Colors.white
-                                    : const Color.fromARGB(255, 42, 57, 66),
-                          ),
-                      focusNode: _inputFocusNode,
-                      onChanged: widget.onTextChanged,
-                      appendSpaceOnAdd: true,
-                      onSubmitted: (value) => _handleSendPressed(),
-                      autofocus: true,
-                      onMentionAdd: (data) {
-                        // focus the text field after adding a mention
-                        // because the focus gets lost
-                        _inputFocusNode.requestFocus();
-                      },
-                      style: InheritedChatTheme.of(context)
-                          .theme
-                          .inputTextStyle
-                          .copyWith(
-                            color: InheritedChatTheme.of(context)
-                                .theme
-                                .inputTextColor,
-                          ),
+                if (widget.replyingToMessage != null)
+                  Padding(
+                    padding: InheritedChatTheme.of(context)
+                        .theme
+                        .inputPadding
+                        .copyWith(bottom: 0),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(5),
+                        color: InheritedChatTheme.of(context)
+                            .theme
+                            .backgroundColor,
+                      ),
+                      child: ReplyMessageWidget(
+                        message: widget.replyingToMessage!,
+                        onCancelReply: widget.onCancelReply,
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-                Visibility(
-                  visible: _sendButtonVisible,
-                  child: SendButton(
-                    onPressed: _handleSendPressed,
-                    padding: buttonPadding,
-                  ),
+                Row(
+                  textDirection: TextDirection.ltr,
+                  children: [
+                    if (widget.onAttachmentPressed != null)
+                      AttachmentButton(
+                        isLoading: widget.isAttachmentUploading ?? false,
+                        onPressed: widget.onAttachmentPressed,
+                        padding: buttonPadding,
+                      ),
+                    Expanded(
+                      child: Padding(
+                        padding: textPadding,
+                        child: FlutterMentions(
+                          key: _mentionsKey,
+                          suggestionPosition: SuggestionPosition.Top,
+                          textCapitalization: TextCapitalization.sentences,
+                          mentions: widget.mentions?.isNotEmpty == true
+                              ? widget.mentions!
+                              : [Mention(trigger: '@')],
+                          onMarkupChanged: (val) => _valueWithMarkup = val,
+                          suggestionListDecoration:
+                              widget.suggestionListDecoration,
+                          cursorColor: InheritedChatTheme.of(context)
+                              .theme
+                              .inputTextCursorColor,
+                          keyboardType: TextInputType.multiline,
+                          maxLines: 5,
+                          minLines: 1,
+                          onTap: widget.onTextFieldTap,
+                          decoration: InheritedChatTheme.of(context)
+                              .theme
+                              .inputTextDecoration
+                              .copyWith(
+                                hintStyle: InheritedChatTheme.of(context)
+                                    .theme
+                                    .inputTextStyle
+                                    .copyWith(
+                                      color: InheritedChatTheme.of(context)
+                                          .theme
+                                          .inputTextColor
+                                          .withOpacity(0.5),
+                                    ),
+                                hintText: InheritedL10n.of(context)
+                                    .l10n
+                                    .inputPlaceholder,
+                                fillColor: Theme.of(context).brightness ==
+                                        Brightness.light
+                                    ? Colors.white
+                                    : const Color.fromARGB(255, 42, 57, 66),
+                              ),
+                          focusNode: _inputFocusNode,
+                          onChanged: widget.onTextChanged,
+                          appendSpaceOnAdd: true,
+                          onSubmitted: (value) => _handleSendPressed(),
+                          autofocus: true,
+                          onMentionAdd: (data) {
+                            // focus the text field after adding a mention
+                            // because the focus gets lost
+                            _inputFocusNode.requestFocus();
+                          },
+                          style: InheritedChatTheme.of(context)
+                              .theme
+                              .inputTextStyle
+                              .copyWith(
+                                color: InheritedChatTheme.of(context)
+                                    .theme
+                                    .inputTextColor,
+                              ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 8,
+                    ),
+                    Visibility(
+                      visible: _sendButtonVisible,
+                      child: SendButton(
+                        onPressed: _handleSendPressed,
+                        padding: buttonPadding,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -298,4 +330,63 @@ class _InputState extends State<Input> {
       ),
     );
   }
+}
+
+class ReplyMessageWidget extends StatelessWidget {
+  const ReplyMessageWidget({
+    super.key,
+    required this.message,
+    this.onCancelReply,
+  });
+
+  final types.TextMessage message;
+  final VoidCallback? onCancelReply;
+
+  @override
+  Widget build(BuildContext context) => IntrinsicHeight(
+        child: Row(
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                color: InheritedChatTheme.of(context).theme.primaryColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(5),
+                  bottomLeft: Radius.circular(5),
+                ),
+              ),
+              width: 6,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: buildReplyMessage(),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget buildReplyMessage() => Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '${message.author.firstName}',
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+              if (onCancelReply != null)
+                InkWell(
+                  onTap: onCancelReply,
+                  child: const Icon(Icons.close, size: 16),
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(message.text),
+        ],
+      );
 }
