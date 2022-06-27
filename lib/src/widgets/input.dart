@@ -8,7 +8,6 @@ import 'attachment_button.dart';
 import 'inherited_chat_theme.dart';
 import 'inherited_l10n.dart';
 import 'input_text_field_controller.dart';
-import 'message.dart';
 import 'send_button.dart';
 
 class NewLineIntent extends Intent {
@@ -97,6 +96,7 @@ class _InputState extends State<Input> {
     if (widget.sendButtonVisibilityMode != oldWidget.sendButtonVisibilityMode) {
       _handleSendButtonVisibilityModeChange();
     }
+    _inputFocusNode.requestFocus();
   }
 
   @override
@@ -208,123 +208,120 @@ class _InputState extends State<Input> {
           ),
         );
 
-    return Focus(
-      autofocus: true,
-      child: Padding(
-        padding: InheritedChatTheme.of(context).theme.inputMargin,
-        child: Material(
-          borderRadius: InheritedChatTheme.of(context).theme.inputBorderRadius,
-          color: InheritedChatTheme.of(context).theme.inputBackgroundColor,
-          child: Container(
-            decoration:
-                InheritedChatTheme.of(context).theme.inputContainerDecoration,
-            padding: safeAreaInsets,
-            child: Column(
-              children: [
-                if (widget.replyingToMessage != null)
-                  Padding(
-                    padding: InheritedChatTheme.of(context)
-                        .theme
-                        .inputPadding
-                        .copyWith(bottom: 0),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(5),
-                        color: InheritedChatTheme.of(context)
+    return Padding(
+      padding: InheritedChatTheme.of(context).theme.inputMargin,
+      child: Material(
+        borderRadius: InheritedChatTheme.of(context).theme.inputBorderRadius,
+        color: InheritedChatTheme.of(context).theme.inputBackgroundColor,
+        child: Container(
+          decoration:
+              InheritedChatTheme.of(context).theme.inputContainerDecoration,
+          padding: safeAreaInsets,
+          child: Column(
+            children: [
+              if (widget.replyingToMessage != null)
+                Padding(
+                  padding: InheritedChatTheme.of(context)
+                      .theme
+                      .inputPadding
+                      .copyWith(bottom: 0),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(5),
+                      color: InheritedChatTheme.of(context)
+                          .theme
+                          .backgroundColor,
+                    ),
+                    child: ReplyMessageWidget(
+                      message: widget.replyingToMessage!,
+                      onCancelReply: widget.onCancelReply,
+                    ),
+                  ),
+                ),
+              Row(
+                textDirection: TextDirection.ltr,
+                children: [
+                  if (widget.onAttachmentPressed != null)
+                    AttachmentButton(
+                      isLoading: widget.isAttachmentUploading ?? false,
+                      onPressed: widget.onAttachmentPressed,
+                      padding: buttonPadding,
+                    ),
+                  Expanded(
+                    child: Padding(
+                      padding: textPadding,
+                      child: FlutterMentions(
+                        key: _mentionsKey,
+                        suggestionPosition: SuggestionPosition.Top,
+                        textCapitalization: TextCapitalization.sentences,
+                        mentions: widget.mentions?.isNotEmpty == true
+                            ? widget.mentions!
+                            : [Mention(trigger: '@')],
+                        onMarkupChanged: (val) => _valueWithMarkup = val,
+                        suggestionListDecoration:
+                            widget.suggestionListDecoration,
+                        cursorColor: InheritedChatTheme.of(context)
                             .theme
-                            .backgroundColor,
-                      ),
-                      child: ReplyMessageWidget(
-                        message: widget.replyingToMessage!,
-                        onCancelReply: widget.onCancelReply,
+                            .inputTextCursorColor,
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 5,
+                        minLines: 1,
+                        onTap: widget.onTextFieldTap,
+                        decoration: InheritedChatTheme.of(context)
+                            .theme
+                            .inputTextDecoration
+                            .copyWith(
+                              hintStyle: InheritedChatTheme.of(context)
+                                  .theme
+                                  .inputTextStyle
+                                  .copyWith(
+                                    color: InheritedChatTheme.of(context)
+                                        .theme
+                                        .inputTextColor
+                                        .withOpacity(0.5),
+                                  ),
+                              hintText: InheritedL10n.of(context)
+                                  .l10n
+                                  .inputPlaceholder,
+                              fillColor: Theme.of(context).brightness ==
+                                      Brightness.light
+                                  ? Colors.white
+                                  : const Color.fromARGB(255, 42, 57, 66),
+                            ),
+                        focusNode: _inputFocusNode,
+                        onChanged: widget.onTextChanged,
+                        appendSpaceOnAdd: true,
+                        onSubmitted: (value) => _handleSendPressed(),
+                        autofocus: true,
+                        onMentionAdd: (data) {
+                          // focus the text field after adding a mention
+                          // because the focus gets lost
+                          _inputFocusNode.requestFocus();
+                        },
+                        style: InheritedChatTheme.of(context)
+                            .theme
+                            .inputTextStyle
+                            .copyWith(
+                              color: InheritedChatTheme.of(context)
+                                  .theme
+                                  .inputTextColor,
+                            ),
                       ),
                     ),
                   ),
-                Row(
-                  textDirection: TextDirection.ltr,
-                  children: [
-                    if (widget.onAttachmentPressed != null)
-                      AttachmentButton(
-                        isLoading: widget.isAttachmentUploading ?? false,
-                        onPressed: widget.onAttachmentPressed,
-                        padding: buttonPadding,
-                      ),
-                    Expanded(
-                      child: Padding(
-                        padding: textPadding,
-                        child: FlutterMentions(
-                          key: _mentionsKey,
-                          suggestionPosition: SuggestionPosition.Top,
-                          textCapitalization: TextCapitalization.sentences,
-                          mentions: widget.mentions?.isNotEmpty == true
-                              ? widget.mentions!
-                              : [Mention(trigger: '@')],
-                          onMarkupChanged: (val) => _valueWithMarkup = val,
-                          suggestionListDecoration:
-                              widget.suggestionListDecoration,
-                          cursorColor: InheritedChatTheme.of(context)
-                              .theme
-                              .inputTextCursorColor,
-                          keyboardType: TextInputType.multiline,
-                          maxLines: 5,
-                          minLines: 1,
-                          onTap: widget.onTextFieldTap,
-                          decoration: InheritedChatTheme.of(context)
-                              .theme
-                              .inputTextDecoration
-                              .copyWith(
-                                hintStyle: InheritedChatTheme.of(context)
-                                    .theme
-                                    .inputTextStyle
-                                    .copyWith(
-                                      color: InheritedChatTheme.of(context)
-                                          .theme
-                                          .inputTextColor
-                                          .withOpacity(0.5),
-                                    ),
-                                hintText: InheritedL10n.of(context)
-                                    .l10n
-                                    .inputPlaceholder,
-                                fillColor: Theme.of(context).brightness ==
-                                        Brightness.light
-                                    ? Colors.white
-                                    : const Color.fromARGB(255, 42, 57, 66),
-                              ),
-                          focusNode: _inputFocusNode,
-                          onChanged: widget.onTextChanged,
-                          appendSpaceOnAdd: true,
-                          onSubmitted: (value) => _handleSendPressed(),
-                          autofocus: true,
-                          onMentionAdd: (data) {
-                            // focus the text field after adding a mention
-                            // because the focus gets lost
-                            _inputFocusNode.requestFocus();
-                          },
-                          style: InheritedChatTheme.of(context)
-                              .theme
-                              .inputTextStyle
-                              .copyWith(
-                                color: InheritedChatTheme.of(context)
-                                    .theme
-                                    .inputTextColor,
-                              ),
-                        ),
-                      ),
+                  const SizedBox(
+                    width: 8,
+                  ),
+                  Visibility(
+                    visible: _sendButtonVisible,
+                    child: SendButton(
+                      onPressed: _handleSendPressed,
+                      padding: buttonPadding,
                     ),
-                    const SizedBox(
-                      width: 8,
-                    ),
-                    Visibility(
-                      visible: _sendButtonVisible,
-                      child: SendButton(
-                        onPressed: _handleSendPressed,
-                        padding: buttonPadding,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -349,7 +346,7 @@ class ReplyMessageWidget extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 color: InheritedChatTheme.of(context).theme.primaryColor,
-                borderRadius: BorderRadius.only(
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(5),
                   bottomLeft: Radius.circular(5),
                 ),
