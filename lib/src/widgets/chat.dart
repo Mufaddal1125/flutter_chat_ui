@@ -113,7 +113,7 @@ class Chat extends StatefulWidget {
   final Widget? customBottomWidget;
 
   /// Show message above Text field when replying to a message.
-  final types.TextMessage? replyingToMessage;
+  final types.Message? replyingToMessage;
 
   /// If [dateFormat], [dateLocale] and/or [timeFormat] is not enough to
   /// customize date headers in your case, use this to return an arbitrary

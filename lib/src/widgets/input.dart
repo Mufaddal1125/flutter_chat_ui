@@ -7,7 +7,6 @@ import '../models/send_button_visibility_mode.dart';
 import 'attachment_button.dart';
 import 'inherited_chat_theme.dart';
 import 'inherited_l10n.dart';
-import 'input_text_field_controller.dart';
 import 'send_button.dart';
 
 class NewLineIntent extends Intent {
@@ -61,7 +60,7 @@ class Input extends StatefulWidget {
   /// Will be called on [TextField] tap.
   final void Function()? onTextFieldTap;
 
-  final types.TextMessage? replyingToMessage;
+  final types.Message? replyingToMessage;
 
   /// Controls the visibility behavior of the [SendButton] based on the
   /// [TextField] state inside the [Input] widget.
@@ -228,9 +227,8 @@ class _InputState extends State<Input> {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(5),
-                      color: InheritedChatTheme.of(context)
-                          .theme
-                          .backgroundColor,
+                      color:
+                          InheritedChatTheme.of(context).theme.backgroundColor,
                     ),
                     child: ReplyMessageWidget(
                       message: widget.replyingToMessage!,
@@ -336,7 +334,7 @@ class ReplyMessageWidget extends StatelessWidget {
     this.onCancelReply,
   });
 
-  final types.TextMessage message;
+  final types.Message message;
   final VoidCallback? onCancelReply;
 
   @override
@@ -364,26 +362,53 @@ class ReplyMessageWidget extends StatelessWidget {
         ),
       );
 
-  Widget buildReplyMessage() => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+  Widget buildReplyMessage() {
+    String text;
+    final message = this.message;
+    if (message is types.TextMessage) {
+      text = message.text;
+    } else if (message is types.FileMessage) {
+      text = message.name;
+    } else {
+      text = '';
+    }
+    return Row(
+      children: [
+        if (message is types.FileMessage) ...[
+          SizedBox(
+            width: 50,
+            child: Image.network(
+              message.uri,
+              filterQuality: FilterQuality.medium,
+            ),
+          ),
+          const SizedBox(width: 12),
+        ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Text(
-                  '${message.author.firstName}',
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${message.author.firstName}',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  if (onCancelReply != null)
+                    InkWell(
+                      onTap: onCancelReply,
+                      child: const Icon(Icons.close, size: 16),
+                    ),
+                ],
               ),
-              if (onCancelReply != null)
-                InkWell(
-                  onTap: onCancelReply,
-                  child: const Icon(Icons.close, size: 16),
-                ),
+              const SizedBox(height: 8),
+              Text(text),
             ],
           ),
-          const SizedBox(height: 8),
-          Text(message.text),
-        ],
-      );
+        ),
+      ],
+    );
+  }
 }
