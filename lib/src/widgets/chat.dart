@@ -2,7 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_chat_types/flutter_chat_types.dart' as types;
-import 'package:flutter_chat_ui/src/widgets/inherited_l10n.dart';
 import 'package:flutter_mentions/flutter_mentions.dart';
 import 'package:intl/intl.dart';
 import 'package:photo_view/photo_view_gallery.dart';
@@ -27,6 +26,7 @@ import 'message.dart';
 /// Entry widget, represents the complete chat. If you wrap it in [SafeArea] and
 /// it should be full screen, set [SafeArea]'s `bottom` to `false`.
 class Chat extends StatefulWidget {
+
   /// Creates a chat widget.
   Chat({
     super.key,
@@ -85,6 +85,7 @@ class Chat extends StatefulWidget {
     this.userAgent,
     this.replyingToMessage,
     this.onCancelReply,
+    this.inputReplyBuilder,
   }) {
     this.showUserAvatars = showUserAvatars ?? (message) => false;
   }
@@ -296,6 +297,9 @@ class Chat extends StatefulWidget {
   /// See [Message.userAgent].
   final String? userAgent;
 
+  /// Custom builder for reply message above input widget.
+  final Function()? inputReplyBuilder;
+
   @override
   State<Chat> createState() => _ChatState();
 }
@@ -395,6 +399,7 @@ class _ChatState extends State<Chat> {
                               sendButtonVisibilityMode:
                                   widget.sendButtonVisibilityMode,
                               onCancelReply: widget.onCancelReply,
+                              inputReplyBuilder: widget.inputReplyBuilder,
                             ),
                       ],
                     ),

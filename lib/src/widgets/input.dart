@@ -33,6 +33,7 @@ class Input extends StatefulWidget {
     this.suggestionListDecoration,
     this.replyingToMessage,
     this.onCancelReply,
+    this.inputReplyBuilder,
   });
 
   final List<Mention>? mentions;
@@ -61,6 +62,8 @@ class Input extends StatefulWidget {
   final void Function()? onTextFieldTap;
 
   final types.Message? replyingToMessage;
+
+  final Function()? inputReplyBuilder;
 
   /// Controls the visibility behavior of the [SendButton] based on the
   /// [TextField] state inside the [Input] widget.
@@ -230,10 +233,11 @@ class _InputState extends State<Input> {
                       color:
                           InheritedChatTheme.of(context).theme.backgroundColor,
                     ),
-                    child: ReplyMessageWidget(
-                      message: widget.replyingToMessage!,
-                      onCancelReply: widget.onCancelReply,
-                    ),
+                    child: widget.inputReplyBuilder?.call() ??
+                        ReplyMessageWidget(
+                          message: widget.replyingToMessage!,
+                          onCancelReply: widget.onCancelReply,
+                        ),
                   ),
                 ),
               Row(
