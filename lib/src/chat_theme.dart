@@ -100,6 +100,7 @@ abstract class ChatTheme {
     required this.userAvatarNameColors,
     required this.userAvatarTextStyle,
     required this.userNameTextStyle,
+    this.autoFocus = true,
   });
 
   /// Icon for select attachment button.
@@ -271,6 +272,9 @@ abstract class ChatTheme {
 
   /// User names text style. Color will be overwritten with [userAvatarNameColors].
   final TextStyle userNameTextStyle;
+
+  /// Autofocus the text field when the chat is opened.
+  final bool autoFocus;
 }
 
 /// Default chat theme which extends [ChatTheme].
@@ -403,6 +407,7 @@ class DefaultChatTheme extends ChatTheme {
       fontWeight: FontWeight.w800,
       height: 1.333,
     ),
+    super.autoFocus = true,
   });
 }
 

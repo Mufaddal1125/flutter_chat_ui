@@ -98,7 +98,9 @@ class _InputState extends State<Input> {
     if (widget.sendButtonVisibilityMode != oldWidget.sendButtonVisibilityMode) {
       _handleSendButtonVisibilityModeChange();
     }
-    _inputFocusNode.requestFocus();
+    if (InheritedChatTheme.of(context).theme.autoFocus) {
+      _inputFocusNode.requestFocus();
+    }
   }
 
   @override
@@ -294,7 +296,7 @@ class _InputState extends State<Input> {
                         onChanged: widget.onTextChanged,
                         appendSpaceOnAdd: true,
                         onSubmitted: (value) => _handleSendPressed(),
-                        autofocus: true,
+                        autofocus: InheritedChatTheme.of(context).theme.autoFocus,
                         onMentionAdd: (data) {
                           // focus the text field after adding a mention
                           // because the focus gets lost
