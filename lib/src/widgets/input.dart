@@ -284,9 +284,12 @@ class _InputState extends State<Input> {
                                         .inputTextColor
                                         .withOpacity(0.5),
                                   ),
-                              hintText: InheritedL10n.of(context)
-                                  .l10n
-                                  .inputPlaceholder,
+                              hintText: InheritedChatTheme.of(context)
+                                      .theme
+                                      .inputTextDecoration
+                                      .hintText ?? InheritedL10n.of(context)
+                                      .l10n
+                                      .inputPlaceholder,
                               fillColor: Theme.of(context).brightness ==
                                       Brightness.light
                                   ? Colors.white
