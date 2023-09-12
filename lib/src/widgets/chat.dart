@@ -26,7 +26,6 @@ import 'message.dart';
 /// Entry widget, represents the complete chat. If you wrap it in [SafeArea] and
 /// it should be full screen, set [SafeArea]'s `bottom` to `false`.
 class Chat extends StatefulWidget {
-
   /// Creates a chat widget.
   Chat({
     super.key,
@@ -86,6 +85,7 @@ class Chat extends StatefulWidget {
     this.replyingToMessage,
     this.onCancelReply,
     this.inputReplyBuilder,
+    this.messageContainerBuilder,
   }) {
     this.showUserAvatars = showUserAvatars ?? (message) => false;
   }
@@ -300,6 +300,12 @@ class Chat extends StatefulWidget {
   /// Custom builder for reply message above input widget.
   final Function()? inputReplyBuilder;
 
+  /// Container widget builder for message.
+  /// Could be used as wrapper widget for message.
+  /// Useful for adding padding, borders, etc.
+  final Widget Function(types.Message message, Widget child)?
+      messageContainerBuilder;
+
   @override
   State<Chat> createState() => _ChatState();
 }
@@ -495,47 +501,56 @@ class _ChatState extends State<Chat> {
               ? min(constraints.maxWidth * 0.72, 440).floor()
               : min(constraints.maxWidth * 0.78, 440).floor();
 
-      return Message(
-        key: ValueKey(message.id),
-        messageAlignment: widget.messageAlignment,
-        avatarBuilder: widget.avatarBuilder,
-        bubbleBuilder: widget.bubbleBuilder,
-        customMessageBuilder: widget.customMessageBuilder,
-        customStatusBuilder: widget.customStatusBuilder,
-        emojiEnlargementBehavior: widget.emojiEnlargementBehavior,
-        fileMessageBuilder: widget.fileMessageBuilder,
-        hideBackgroundOnEmojiMessages: widget.hideBackgroundOnEmojiMessages,
-        imageMessageBuilder: widget.imageMessageBuilder,
-        isTextMessageTextSelectable: widget.isTextMessageTextSelectable,
+      return _messageContainerWrapper(
         message: message,
-        messageWidth: messageWidth,
-        nameBuilder: widget.nameBuilder,
-        onAvatarTap: widget.onAvatarTap,
-        onMessageDoubleTap: widget.onMessageDoubleTap,
-        onMessageLongPress: widget.onMessageLongPress,
-        onMessageStatusLongPress: widget.onMessageStatusLongPress,
-        onMessageStatusTap: widget.onMessageStatusTap,
-        onMessageTap: (context, tappedMessage) {
-          if (tappedMessage is types.ImageMessage &&
-              widget.disableImageGallery != true) {
-            _onImagePressed(tappedMessage);
-          }
+        child: Message(
+          key: ValueKey(message.id),
+          messageAlignment: widget.messageAlignment,
+          avatarBuilder: widget.avatarBuilder,
+          bubbleBuilder: widget.bubbleBuilder,
+          customMessageBuilder: widget.customMessageBuilder,
+          customStatusBuilder: widget.customStatusBuilder,
+          emojiEnlargementBehavior: widget.emojiEnlargementBehavior,
+          fileMessageBuilder: widget.fileMessageBuilder,
+          hideBackgroundOnEmojiMessages: widget.hideBackgroundOnEmojiMessages,
+          imageMessageBuilder: widget.imageMessageBuilder,
+          isTextMessageTextSelectable: widget.isTextMessageTextSelectable,
+          message: message,
+          messageWidth: messageWidth,
+          nameBuilder: widget.nameBuilder,
+          onAvatarTap: widget.onAvatarTap,
+          onMessageDoubleTap: widget.onMessageDoubleTap,
+          onMessageLongPress: widget.onMessageLongPress,
+          onMessageStatusLongPress: widget.onMessageStatusLongPress,
+          onMessageStatusTap: widget.onMessageStatusTap,
+          onMessageTap: (context, tappedMessage) {
+            if (tappedMessage is types.ImageMessage &&
+                widget.disableImageGallery != true) {
+              _onImagePressed(tappedMessage);
+            }
 
-          widget.onMessageTap?.call(context, tappedMessage);
-        },
-        onMessageVisibilityChanged: widget.onMessageVisibilityChanged,
-        onPreviewDataFetched: _onPreviewDataFetched,
-        previewTapOptions: widget.previewTapOptions,
-        roundBorder: map['nextMessageInGroup'] == true,
-        showAvatar: map['nextMessageInGroup'] == false,
-        showName: map['showName'] == true,
-        showStatus: map['showStatus'] == true,
-        showUserAvatars: widget.showUserAvatars(message),
-        textMessageBuilder: widget.textMessageBuilder,
-        usePreviewData: widget.usePreviewData,
-        userAgent: widget.userAgent,
+            widget.onMessageTap?.call(context, tappedMessage);
+          },
+          onMessageVisibilityChanged: widget.onMessageVisibilityChanged,
+          onPreviewDataFetched: _onPreviewDataFetched,
+          previewTapOptions: widget.previewTapOptions,
+          roundBorder: map['nextMessageInGroup'] == true,
+          showAvatar: map['nextMessageInGroup'] == false,
+          showName: map['showName'] == true,
+          showStatus: map['showStatus'] == true,
+          showUserAvatars: widget.showUserAvatars(message),
+          textMessageBuilder: widget.textMessageBuilder,
+          usePreviewData: widget.usePreviewData,
+          userAgent: widget.userAgent,
+        ),
       );
     }
+  }
+
+  Widget _messageContainerWrapper(
+      {required Widget child, required types.Message message}) {
+    if (widget.messageContainerBuilder == null) return child;
+    return widget.messageContainerBuilder!(message, child);
   }
 
   void _onCloseGalleryPressed() {
